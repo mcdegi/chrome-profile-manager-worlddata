@@ -1,0 +1,22 @@
+name: Hourly de258 world data
+on:
+  schedule:
+    - cron: '37 * * * *'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: de258-world-data
+  cancel-in-progress: false
+jobs:
+  collect:
+    runs-on: windows-2022
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - name: Collect, validate and publish
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CPM_WORLDDATA_SIGNING_KEY: ${{ secrets.WORLDDATA_SIGNING_KEY }}
+        run: ./collect.ps1
