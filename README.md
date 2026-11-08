@@ -10,6 +10,10 @@ Eine separate persistente Reservierung verhindert schnelle Wiederholungsabrufe n
 fehlgeschlagenen oder abgebrochenen Jobs. Neue Daten werden erst nach Prüfung und
 erfolgreichem Upload über `feeds/de258.json` freigegeben.
 
+Der Manager prüft beim Start und alle fünf Minuten. GitHubs CDN kann den kleinen
+Zeiger zusätzlich einige Minuten zwischenspeichern; neue Veröffentlichungen sind
+deshalb nicht an jedem Standort sofort sichtbar.
+
 - [Aktuelle Spieler-Neustartliste](https://github.com/mcdegi/chrome-profile-manager-worlddata/releases/latest/download/player-starts.csv)
 - [Aktuelles vollständiges Datenpaket](https://github.com/mcdegi/chrome-profile-manager-worlddata/releases/latest/download/worlddata.zip)
 - [Historische Stände](https://github.com/mcdegi/chrome-profile-manager-worlddata/releases)
