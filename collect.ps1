@@ -1,7 +1,7 @@
 $ErrorActionPreference = 'Stop'
 $repository = 'mcdegi/chrome-profile-manager-worlddata'
-$collectorTag = 'collector-v0.2.8'
-$collectorSha256 = '349707B77A27D3D788E2A9C14D5C012C329B4C3601305921B1789C50B35DB02F'
+$collectorTag = 'collector-v0.2.14'
+$collectorSha256 = 'BBEC90AA52DECA15222DA5E57293E906A17FA3BA58966CE577C6D535D7172ED1'
 if ($env:GITHUB_REPOSITORY -ne $repository -or !$env:RUNNER_TEMP) { throw 'This workflow only runs in its public data repository.' }
 $toolRoot = Join-Path $env:RUNNER_TEMP 'cpm-worlddata'
 New-Item -ItemType Directory -Path $toolRoot | Out-Null
@@ -33,7 +33,7 @@ function Invoke-Collector([string[]]$Arguments, [int]$TimeoutSeconds = 480) {
     $process = Start-Process -FilePath $exe -ArgumentList $line -WorkingDirectory $toolRoot -WindowStyle Hidden -RedirectStandardError $errors -RedirectStandardOutput (Join-Path $toolRoot 'collector-output.txt') -PassThru
     if (!$process.WaitForExit($TimeoutSeconds * 1000)) { $process.Kill(); $process.WaitForExit(); throw 'Collector exceeded its deadline.' }
     $process.Refresh()
-    if ($process.ExitCode -ne 0 -and (Test-Path -LiteralPath $errors)) { $classification = [IO.File]::ReadAllText($errors).Trim(); if ($classification -match '^WorldDataCollector: [A-Za-z0-9]+$') { Write-Host $classification } }
+    if ($process.ExitCode -ne 0 -and (Test-Path -LiteralPath $errors)) { $classification = [IO.File]::ReadAllText($errors).Trim(); if ($classification -match '^WorldDataCollector: [A-Za-z0-9]+(?:; phase=[a-z-]+)?$') { Write-Host $classification } }
     return $process.ExitCode
 }
 function Get-ContentFile([string]$Name, [bool]$Optional = $false) {
@@ -61,6 +61,12 @@ function From-ContentFile($Value) { return [Text.Encoding]::UTF8.GetString([Conv
 function ManifestFromEnvelope([string]$Text) {
     $envelope = $Text | ConvertFrom-Json
     return ([Text.Encoding]::UTF8.GetString([Convert]::FromBase64String($envelope.Manifest)) | ConvertFrom-Json)
+}
+
+$hostEntry = Get-ContentFile 'feeds/de258-host.json' $true
+if ($hostEntry -and ((From-ContentFile $hostEntry) | ConvertFrom-Json).Kind -eq 'server') {
+    'Collection belongs to Windows Server; GitHub scheduler does not fetch world data.' | Add-Content $env:GITHUB_STEP_SUMMARY
+    exit 0
 }
 
 Download "https://github.com/$repository/releases/download/$collectorTag/collector.exe" $exe 16777216
